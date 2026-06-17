@@ -355,11 +355,11 @@ async function queryData(t){
   var webData='';
   try{
     var queries=[];
-    // 路1：验证DB学校（冲稳保各1所）
+    // 路1：验证DB学校（冲稳保各5所，搜最新分数线）
     var dbSchools=[];
-    if(j&&j.chong&&j.chong.length)dbSchools.push(j.chong[0].school);
-    if(j&&j.wen&&j.wen.length)dbSchools.push(j.wen[0].school);
-    if(j&&j.bao&&j.bao.length)dbSchools.push(j.bao[0].school);
+    if(j&&j.chong)for(var i=0;i<Math.min(3,j.chong.length);i++)dbSchools.push(j.chong[i].school);
+    if(j&&j.wen)for(var i=0;i<Math.min(5,j.wen.length);i++)dbSchools.push(j.wen[i].school);
+    if(j&&j.bao)for(var i=0;i<Math.min(5,j.bao.length);i++)dbSchools.push(j.bao[i].school);
     for(var i=0;i<dbSchools.length;i++){
       queries.push(dbSchools[i]+' '+info.province+' 2025录取分数线位次 王牌专业');
     }
