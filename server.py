@@ -357,7 +357,7 @@ async function queryData(t){
     var queries=[];
     // 路1：验证DB学校（冲稳保各5所，搜最新分数线）
     var dbSchools=[];
-    if(j&&j.chong)for(var i=0;i<Math.min(3,j.chong.length);i++)dbSchools.push(j.chong[i].school);
+    if(j&&j.chong)for(var i=0;i<Math.min(5,j.chong.length);i++)dbSchools.push(j.chong[i].school);
     if(j&&j.wen)for(var i=0;i<Math.min(5,j.wen.length);i++)dbSchools.push(j.wen[i].school);
     if(j&&j.bao)for(var i=0;i<Math.min(5,j.bao.length);i++)dbSchools.push(j.bao[i].school);
     for(var i=0;i<dbSchools.length;i++){
@@ -379,11 +379,13 @@ async function queryData(t){
     // 去重query
     var seenQ={};var finalQ=[];
     for(var i=0;i<queries.length;i++){if(!seenQ[queries[i]]){seenQ[queries[i]]=1;finalQ.push(queries[i]);}}
-    // 并行搜索（所有query同时发，不等排队）
-    var tasks=[];
-    for(var i=0;i<Math.min(20,finalQ.length);i++){tasks.push(searchWeb(finalQ[i],cfg,3));}
+    // 分3批并行搜索（每批5个同时发，避免限流）
     var allWeb=[];
-    try{var results=await Promise.all(tasks);for(var i=0;i<results.length;i++){allWeb=allWeb.concat(results[i]);}}catch(e){console.warn('并行搜索部分失败:',e.message);}
+    for(var b=0;b<finalQ.length;b+=5){
+      var batch=finalQ.slice(b,b+5);
+      var tasks=[];for(var i=0;i<batch.length;i++){tasks.push(searchWeb(batch[i],cfg,2));}
+      try{var results=await Promise.all(tasks);for(var i=0;i<results.length;i++){allWeb=allWeb.concat(results[i]);}}catch(e){console.warn('批次搜索失败:',e.message);}
+    }
     var seen={};var unique=[];
     for(var i=0;i<allWeb.length;i++){var k=allWeb[i].slice(0,50);if(!seen[k]){seen[k]=1;unique.push(allWeb[i]);}}
     if(unique.length){webData='【联网搜索·仅供参考】\n';unique.slice(0,5).forEach(function(w){webData+='· '+w.slice(0,200)+'\n';});}
