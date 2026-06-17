@@ -353,13 +353,13 @@ async function queryData(t){
   var webData='';
   try{
     var queries=[];
-    // 路1：验证DB学校（冲稳保各2所，搜分数线+优势）
+    // 路1：验证DB学校（冲稳保各1所）
     var dbSchools=[];
-    if(j&&j.chong)for(var i=0;i<Math.min(2,j.chong.length);i++)dbSchools.push(j.chong[i].school);
-    if(j&&j.wen)for(var i=0;i<Math.min(2,j.wen.length);i++)dbSchools.push(j.wen[i].school);
-    if(j&&j.bao)for(var i=0;i<Math.min(2,j.bao.length);i++)dbSchools.push(j.bao[i].school);
+    if(j&&j.chong&&j.chong.length)dbSchools.push(j.chong[0].school);
+    if(j&&j.wen&&j.wen.length)dbSchools.push(j.wen[0].school);
+    if(j&&j.bao&&j.bao.length)dbSchools.push(j.bao[0].school);
     for(var i=0;i<dbSchools.length;i++){
-      queries.push(dbSchools[i]+' '+info.province+' 2025录取分数线位次 王牌专业 就业');
+      queries.push(dbSchools[i]+' '+info.province+' 2025录取分数线位次 王牌专业');
     }
     // 路2：补全DB没有的2025数据
     if(info.majors.length&&info.province){
