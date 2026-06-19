@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head><meta charset="UTF-8"><title>雪峰Agent</title>
+<head><meta charset="UTF-8"><title>雪峰志愿分析助手</title>
 <style>
 body{font-family:'Microsoft YaHei',sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#1a1a1a;color:#ccc}
 .box{text-align:center;max-width:500px;padding:40px}
@@ -15,15 +15,15 @@ p{line-height:2;font-size:15px}
   <div style="font-size:48px">🔍</div>
   <h2 id="status">正在检测服务器...</h2>
   <p id="msg"></p>
-  <button class="btn" onclick="location.href='http://127.0.0.1:8765/'">🔄 重试</button>
+  <button class="btn" onclick="location.href='http://127.0.0.1:8766/'">🔄 重试</button>
 </div>
 <script>
-fetch('http://127.0.0.1:8765/ping').then(r=>r.json()).then(d=>{
+fetch('http://127.0.0.1:8766/ping').then(r=>r.json()).then(d=>{
   if(d.ok){
     document.getElementById('status').innerHTML='✅ 服务器已就绪';
     document.getElementById('status').className='ok';
-    document.getElementById('msg').innerHTML='即将跳转到雪峰Agent...';
-    setTimeout(function(){location.href='http://127.0.0.1:8765/'},800);
+    document.getElementById('msg').innerHTML='即将跳转到雪峰志愿分析助手...';
+    setTimeout(function(){location.href='http://127.0.0.1:8766/'},800);
   }
 }).catch(function(){
   document.getElementById('status').innerHTML='❌ 服务器未启动';

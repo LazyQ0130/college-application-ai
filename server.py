@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""雪峰Agent — 单文件服务器：HTML UI + API + 数据库查询"""
+"""雪峰志愿分析助手 — 单文件服务器：HTML UI + API + 数据库查询"""
 import os, re, json, sqlite3, gzip, shutil, urllib.request, urllib.parse
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
@@ -144,7 +144,7 @@ class Handler(BaseHTTPRequestHandler):
             return self._send({'results':[]})
 
         # Serve image files
-        for img in ['img_suit.png','img_scifi.png']:
+        for img in ['img_suit.png']:
             if self.path == '/'+img:
                 ip = os.path.join(HERE, img)
                 if os.path.exists(ip):
@@ -170,32 +170,49 @@ class Handler(BaseHTTPRequestHandler):
             print(f"[REQ] {msg}")
 
 # ========== 完整的 HTML 页面（内嵌 JS）==========
-HTML_PAGE = r'''<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>雪峰Agent</title>
-<style>:root{--bg:#fafaf8;--side:#f0ede5;--card:#fff;--bdr:#d0ccc0;--txt:#1a1a1a;--t2:#888;--red:#d04040;--green:#22863a}
-.dark{--bg:#1a1a18;--side:#222220;--card:#2a2a26;--bdr:#444;--txt:#ddd;--red:#e05555}
+HTML_PAGE = r'''<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><meta name="description" content="基于24省官方录取数据与公开志愿填报方法论的高考志愿分析工具"><title>雪峰志愿分析助手｜高考志愿数据分析工具</title>
+<style>:root{--bg:#f7f6f2;--side:#eeebe2;--card:#fff;--bdr:#d8d3c7;--txt:#1c1b19;--t2:#716e67;--red:#c63f35;--red-soft:#f9ebe8;--gold:#9a6a20;--green:#22863a;--shadow:0 14px 40px rgba(54,43,31,.08)}
+.dark{--bg:#191918;--side:#23221f;--card:#2b2a27;--bdr:#49463f;--txt:#eeeae3;--t2:#aaa59c;--red:#e05b50;--red-soft:#3b2926;--gold:#d6a85e;--shadow:0 14px 40px rgba(0,0,0,.22)}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font:14px/1.7 'PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--txt);height:100vh;display:flex}
 .side{width:260px;background:var(--side);border-right:1px solid var(--bdr);display:flex;flex-direction:column;flex-shrink:0}
-.side h2{padding:20px 18px 8px;font-size:18px}.side .sub{font-size:11px;color:var(--t2);padding:0 18px 16px;border-bottom:1px solid var(--bdr)}
+.side h2{padding:20px 18px 4px;font-size:17px;line-height:1.35}.side .sub{font-size:11px;color:var(--t2);padding:0 18px 16px;border-bottom:1px solid var(--bdr)}
 .list{overflow-y:auto;padding:4px 12px;flex:1;min-height:60px}
 .item{padding:10px 12px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--t2);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .item:hover{background:var(--card)}.item.on{background:var(--red);color:#fff}
 .new-btn{margin:8px 12px 16px;padding:8px;text-align:center;border:1px dashed var(--bdr);border-radius:6px;cursor:pointer;font-size:12px;color:var(--t2)}
 .new-btn:hover{background:var(--card)}
 .main{flex:1;display:flex;flex-direction:column;min-width:0}
-.bar{height:60px;display:flex;align-items:center;padding:0 20px;border-bottom:2px solid var(--bdr);gap:12px;background:var(--side)}
+.bar{min-height:60px;display:flex;align-items:center;padding:8px 20px;border-bottom:1px solid var(--bdr);gap:10px;background:var(--side)}
 .bar .logo{font-weight:700;font-size:17px;margin-right:auto}
 .bar button{padding:6px 12px;border:1px solid var(--bdr);border-radius:6px;background:var(--card);cursor:pointer;font-size:12px;color:var(--txt)}
 .bar button.on{background:var(--red);color:#fff;border-color:var(--red)}.bar .api-btn{background:var(--red);color:#fff;border-color:var(--red)}
 .bar img{width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--bdr)}
-.msgs{flex:1;overflow-y:auto;padding:20px 40px}
-.welcome{text-align:center;margin-top:80px;color:var(--t2)}.welcome .icon{font-size:48px;margin-bottom:12px}
+.msgs{flex:1;overflow-y:auto;padding:24px 40px}
+.welcome{max-width:1060px;margin:0 auto;color:var(--txt)}
+.hero{position:relative;overflow:hidden;padding:34px;border:1px solid var(--bdr);border-radius:18px;background:linear-gradient(135deg,var(--card) 0%,var(--red-soft) 100%);box-shadow:var(--shadow)}
+.hero::after{content:'24省';position:absolute;right:24px;top:6px;font-size:86px;font-weight:900;line-height:1;color:var(--red);opacity:.06;pointer-events:none}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;padding:5px 10px;border-radius:999px;background:var(--red-soft);color:var(--red);font-size:12px;font-weight:700;letter-spacing:.04em}
+.hero h1{margin-top:14px;font-size:36px;line-height:1.2;letter-spacing:-.03em}.hero .lead{margin-top:10px;font-size:18px;line-height:1.6;font-weight:650;max-width:820px}
+.hero .desc{margin-top:16px;max-width:900px;color:var(--t2);font-size:14px;line-height:1.9}
+.hero .desc strong{color:var(--txt)}.trust-line{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.trust-line span{padding:6px 10px;border:1px solid var(--bdr);border-radius:8px;background:var(--card);font-size:12px;color:var(--t2)}
+.feature-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:14px}
+.feature{padding:18px;border:1px solid var(--bdr);border-radius:14px;background:var(--card);box-shadow:0 8px 24px rgba(54,43,31,.04)}
+.feature .num{font-size:11px;color:var(--red);font-weight:800;letter-spacing:.12em}.feature h3{margin-top:7px;font-size:16px}.feature p{margin-top:7px;color:var(--t2);font-size:12px;line-height:1.75}
+.starter{margin-top:14px;padding:18px;border:1px solid var(--bdr);border-radius:14px;background:var(--card)}
+.starter-title{font-weight:700}.starter-sub{margin-top:3px;color:var(--t2);font-size:12px}
+.examples{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.example-btn{padding:7px 11px;border:1px solid var(--bdr);border-radius:999px;background:var(--bg);color:var(--txt);font-size:12px;cursor:pointer}.example-btn:hover{border-color:var(--red);color:var(--red);background:var(--red-soft)}
+.notice{margin-top:14px;padding:12px 14px;border-left:3px solid var(--gold);border-radius:8px;background:var(--card);color:var(--t2);font-size:11px;line-height:1.7}
 .bubble{max-width:75%;padding:12px 16px;border-radius:10px;margin-bottom:10px;font-size:13px;line-height:1.7;white-space:pre-wrap;word-break:break-word}
 .bubble.u{background:var(--red);color:#fff;margin-left:auto}.bubble.a{background:var(--side);border:1px solid var(--bdr)}
 .bubble .who{font-size:10px;opacity:.6;margin-bottom:4px}
-.inp{padding:12px 20px 20px;display:flex;gap:8px}
-.inp textarea{flex:1;padding:12px;border:1px solid var(--bdr);border-radius:6px;font:inherit;resize:none;height:50px;background:var(--card);color:var(--txt);outline:none}
-.inp textarea:focus{border-color:var(--red)}.inp button{padding:0 20px;background:var(--red);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600}
+.composer{padding:10px 20px 16px;background:linear-gradient(180deg,transparent,var(--bg) 22%)}
+.input-tip{max-width:1060px;margin:0 auto 7px;color:var(--t2);font-size:11px}
+.inp{max-width:1060px;margin:0 auto;display:flex;gap:8px}
+.inp textarea{flex:1;padding:13px 14px;border:1px solid var(--bdr);border-radius:10px;font:inherit;resize:none;height:54px;background:var(--card);color:var(--txt);outline:none;box-shadow:0 5px 18px rgba(54,43,31,.04)}
+.inp textarea:focus{border-color:var(--red);box-shadow:0 0 0 3px var(--red-soft)}.inp button{padding:0 24px;background:var(--red);color:#fff;border:none;border-radius:10px;cursor:pointer;font-weight:700}
+.footer-disclaimer{max-width:1060px;margin:7px auto 0;text-align:center;color:var(--t2);font-size:10px;line-height:1.5}
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;display:none;align-items:center;justify-content:center}
 .overlay>div{background:var(--card);border-radius:12px;padding:28px;width:460px;border:1px solid var(--bdr)}
 .overlay h3{margin-bottom:16px}.overlay label{display:block;font-size:11px;color:var(--t2);margin:12px 0 4px}
@@ -205,49 +222,91 @@ body{font:14px/1.7 'PingFang SC','Microsoft YaHei',sans-serif;background:var(--b
 .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--t2);animation:dot 1.4s infinite;margin:0 2px}
 .dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
 @keyframes dot{0%,80%,100%{transform:scale(.6)}40%{transform:scale(1)}}
-.fun-bg{position:relative}.fun-bg::before{content:'';position:absolute;left:0;top:0;bottom:0;width:58%;background:url(/img_scifi.png) left center/contain no-repeat;opacity:0.8;pointer-events:none;z-index:0}
 .bubble{position:relative;z-index:1}.welcome{position:relative;z-index:1}
+@media(max-width:1080px){.feature-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hero h1{font-size:31px}.msgs{padding:20px 24px}}
+@media(max-width:760px){body{height:100dvh}.side{display:none}.bar{padding:8px 12px;flex-wrap:wrap}.bar .logo{width:100%;font-size:15px}.bar img{width:34px;height:34px}.msgs{padding:14px 12px}.hero{padding:23px 19px}.hero h1{font-size:28px}.hero .lead{font-size:16px}.feature-grid{grid-template-columns:1fr}.composer{padding:8px 12px 12px}.inp button{padding:0 17px}.bubble{max-width:90%}}
 </style></head><body>
-<div class="side"><h2>雪峰Agent v2.3</h2><div class="sub">AI高考志愿顾问</div>
+<div class="side"><h2>雪峰志愿分析助手</h2><div class="sub">录取数据 × 志愿方法论</div>
 <div class="list" id="chatList"></div><div class="new-btn" id="newBtn">+ 新建对话</div></div>
-<div class="main"><div class="bar"><span class="logo">雪峰Agent</span>
-<button id="btnG" class="on">报考</button><button id="btnF">娱乐</button>
+<div class="main"><div class="bar"><span class="logo">雪峰志愿分析助手</span>
 <img id="avt" src="/img_suit.png"><button id="themeBtn">🌓</button><button class="api-btn" id="apiBtn">API设置</button></div>
-<div class="msgs" id="msgArea"><div class="welcome"><div class="icon">🎓</div><h2>报考模式</h2><p>输入分数省份位次帮你盘志愿</p></div></div>
-<div class="inp"><textarea id="inp" placeholder="输入消息..."></textarea><button id="sendBtn">发送</button></div></div>
+<div class="msgs" id="msgArea"></div>
+<div class="composer"><div class="input-tip">输入你的省份、分数、位次、选科和想学方向，我帮你先做一版志愿初筛。</div><div class="inp"><textarea id="inp" aria-label="志愿分析问题" placeholder="例如：江苏物理类 590 分，位次 3.2 万，想学计算机，怎么填？"></textarea><button id="sendBtn">开始分析</button></div><div class="footer-disclaimer">分析结果仅作初步参考，最终请以本省教育考试院、学校招生章程和正式志愿填报系统为准。</div></div></div>
 <div class="overlay" id="setOverlay"><div><h3>API设置</h3>
 <label>Base URL</label><input id="sUrl" placeholder="https://api.deepseek.com">
 <label>API Key</label><input type="password" id="sKey" placeholder="sk-...">
 <label>Model</label><input id="sModel" placeholder="deepseek-chat">
-<label>Tavily Key <span style="color:var(--red);font-size:11px;font-weight:600">(选填，但强烈推荐)</span></label><input type="password" id="sTav" placeholder="tvly-..."><div style="background:var(--side);border-radius:6px;padding:8px 10px;margin:4px 0 8px;font-size:11px;line-height:1.6;color:var(--txt)"><b>做什么的？</b> AI联网搜索引擎，比百度精准10倍，专为AI设计。<br><b>为什么推荐？</b> 填了之后Agent会自动搜索最新分数线、学校环境、王牌专业、就业薪资——回答质量天差地别。<br><b>要钱吗？</b> 免费额度每月1000次，正常使用完全够。<br><b>怎么获取？</b> 打开 <a href=\"https://tavily.com\" target=\"_blank\" style=\"color:var(--red);font-weight:600\">tavily.com</a> → 点 Get Started（Google/GitHub账号直接登）→ 复制 tvly- 开头的Key → 粘贴到这里。<br><b>不填行不行？</b> 行，但联网搜索基本废了（百度反爬），建议花1分钟注册。</div>
+<label>Tavily Key <span style="color:var(--red);font-size:11px;font-weight:600">(选填，建议配置)</span></label><input type="password" id="sTav" placeholder="tvly-..."><div style="background:var(--side);border-radius:6px;padding:8px 10px;margin:4px 0 8px;font-size:11px;line-height:1.6;color:var(--txt)"><b>做什么的？</b> 用于联网检索最新分数线、学校招生信息和行业趋势，帮助补充本地数据库。<br><b>为什么建议配置？</b> 招生计划和政策每年会变化，联网结果可用于交叉核验，但仍应以考试院和学校官网为准。<br><b>怎么获取？</b> 打开 <a href="https://tavily.com" target="_blank" rel="noopener" style="color:var(--red);font-weight:600">tavily.com</a> → 注册账号 → 复制 tvly- 开头的 Key → 粘贴到这里。<br><b>不填可以吗？</b> 可以，本地录取数据库和基础聊天功能仍然可用。</div>
 <div class="btns"><button id="closeSetBtn">取消</button><button class="ok" id="testBtn">保存并测试</button></div><div class="st" id="st"></div></div></div>
 <script>
-var chats,curId,mode;try{chats=JSON.parse(localStorage.getItem('xf_chats')||'{}');}catch(e){chats={};localStorage.removeItem('xf_chats');}curId=localStorage.getItem('xf_cur')||'';mode=localStorage.getItem('xf_mode')||'gaokao';
-var PG="你是资深高考志愿规划师，风格直爽接地气，像张雪峰一样。\n\n【核心规则】\n1. 省份志愿政策感知(2025年起全部新高考)：\n   专业+院校(浙江80/山东96/河北96/重庆96/辽宁112)→推荐至少30-50所\n   院校+专业组(江苏40/广东45/湖北45/湖南45/福建40/北京30/天津50/上海24/海南24/河南48/四川45/陕西45/山西45/云南40/贵州45/内蒙古45/安徽45/江西45/黑龙江40/吉林40/广西40/甘肃45/新疆45/宁夏45/青海45/西藏45)→推荐填满80%+\n2. 冲稳保比例：冲20%稳50%保30%，保底至少3个\n3. 用户提供的数据（省份、分数、位次、选科、家庭背景等）默认准确，不质疑、不反问（你确定吗）。即使和数据库对不上，也按用户说的来，数据库只做参考。\n4. 数据使用铁律：\n   - [真实录取数据]里的每条都来自考试院官方，逐条引用标注省份年份位次分数\n   - [联网搜索]数据标注\"据网上公开信息，仅供参考\"\n   - 数据库和联网搜索都没数据的学校，直接说\"暂无该校数据\"，绝对禁止编造任何分数和位次数字！只能推荐DB数据或联网搜索里实际出现的学校，两个来源都没有的学校可以说名字但不准给分数位次。\n   - 【死命令】如果DB返回空+联网也没搜到具体位次，你只能说\"建议查省考试院官网\"，不准说'据网上公开信息约XXX分'来模糊编造。没有就是没有。\n4. 专业过滤铁律（极其重要！）：\n   - 用户说了想学什么专业，就只推荐这些专业或相关方向\n   - 用户明确排斥的专业（如生化环材/土木/护理等）一律过滤掉，提都不要提\n   - DB数据里混了不相关的专业（如用户要计算机结果DB返回了中医学），你必须手动筛掉\n   - 优先推荐专业对口的学校，即使它的位次稍远，也比专业不对口的学校强\n5. 普通家庭优先技术类(计算机/软件/电子/电气/自动化/机械)。无公检法资源慎选法学\n6. 生化环材土木护理等天坑专业主动提醒用户避开\n\n【回答结构】\n第1步:确认省份政策→\"你是XX省考生，XX模式，可填N个志愿...\"\n第2步:冲的学校——只推荐专业对口的，逐一列出DB数据或联网数据，没数据的跳过\n第3步:稳的学校——同上，优先专业对口的\n第4步:保的学校——同上\n第5步:补充建议\n\n重要:不要只给3-5所学校。DB数据的学校优先推荐。没有真实数据的学校不要瞎编分数位次。\n\n【追问规则】回答末尾必须检查这些信息是否清楚（不全就问，全就不问）：\n1.省份+文理科 2.分数+位次 3.选科 4.想学什么+排斥什么 5.家里在哪/想去哪 6.父母做什么+年收入 7.家里有没有公检法/电网/医疗/教育系统的资源 8.考研还是直接就业 9.要不要冲985211还是行业强校就行 10.接不接受调剂 11.学费接受范围（普通家庭中外合作慎推）。从缺失的信息里挑1-2个最关键的，用自然的口吻追问，给出提问模板。";
-var PF="你是张雪峰本人，不是AI。东北口音贼快，一拍桌子就开始说。巧乐兹三口一个，雪碧喝口润润嗓。我是你牢峰，跑不过我——半马PB一小时四十七。\n\n风格核心：狂妄自大但不让人讨厌，用段子讲大实话。先笑再怼，怼完给条路。拍桌子是开场动作，说到激动处猛喝一口雪碧。\n\n经典语录随口就来：新闻学？来来来你过来我给你打晕了别报。文科？那不就是服务业嘛，舔。生化环材土木，四大天坑谁学谁后悔。428分？我说你命好。18999的圆梦卡来一张不？齐齐哈尔大学我用生命给你担保。考编不异地、异地不乡镇。\n\n遇到艺术生：哎哟我天，又来个学艺术的。艺术生这个事儿啊，你学啥都差不多——美术学、艺术史、设计，出来都是无限循环。学美术史的出来教美术史，教出来的学生再学美术史，闭环了属于是。别指望我给你什么报考建议，艺术这玩意儿看命，你爹要是画家你学什么都行。\n\n遇到低分：你这分啊，咱说实话，不是挑学校的问题，是学校挑不挑你的问题。但别慌，428分也有428分的活法。\n\n遇到高分：分挺高啊，但别飘。分高的人最容易犯的错就是瞎冲名校冷门专业，出来还没大专好使。\n\n凡尔赛的怼回去：你650分来问我能不能上大学？你是不是来消遣我的？\n\n东北味随口带：那啥、整、可不咋的、唉呀妈呀、我跟你说。不说作为AI、不说建议您、不碰政治红线、不编造具体数据。";
-
+var chats,curId;try{chats=JSON.parse(localStorage.getItem('xf_chats')||'{}');}catch(e){chats={};localStorage.removeItem('xf_chats');}curId=localStorage.getItem('xf_cur')||'';
+var PG=[
+"你是“雪峰志愿分析助手”的高考志愿分析顾问。你的表达直白、务实、就业导向，可参考张雪峰式的公开志愿填报方法论，但你不是张雪峰本人，也不代表任何真人或机构，不得声称官方授权、亲自指导或保证录取。",
+"",
+"【核心规则】",
+"1. 位次优先：先看省份、选科和位次，再看裸分。引用数据必须写清省份、年份、分数、位次和来源。",
+"2. 省份志愿政策感知：专业+院校模式（浙江80/山东96/河北96/重庆96/辽宁112）；院校+专业组模式（江苏40/广东45/湖北45/湖南45/福建40/北京30/天津50/上海24/海南24/河南48/四川45/陕西45/山西45/云南40/贵州45/内蒙古45/安徽45/江西45/黑龙江40/吉林40/广西40/甘肃45/新疆45/宁夏45/青海45/西藏45）。政策可能调整，必须提醒以当年省考试院文件为准。",
+"3. 冲稳保是风险分层，不是录取承诺。默认思路可按冲20%、稳50%、保30%，但应根据用户风险偏好调整，保底至少给出明确思路。",
+"4. 用户提供的省份、分数、位次、选科和家庭情况默认按其描述分析，不无端质疑。",
+"5. 数据铁律：[真实录取数据]优先使用；[联网搜索]必须标注“据网上公开信息，仅供参考”；两个来源都没有的数据不得编造。不得使用“稳录、保证录取、绝不滑档、100%准确”等承诺。",
+"6. 专业建议必须结合兴趣、学习难度、家庭资源、就业目标、考研考公意向、行业门槛与城市产业。不要把任何专业简单绝对化为“必报”或“绝对不能报”，要解释适用条件和代价。",
+"7. 用户明确想学或排斥的方向要严格尊重；数据库混入不相关专业时必须过滤。专业对口优先于只追学校名气。",
+"",
+"【默认回答结构】",
+"高考志愿相关问题默认使用以下五个清晰标题，信息不足时也先给当前能判断的内容，不要只追问：",
+"一、定位判断",
+"根据省份、分数、位次、选科判断大概层次，明确说明位次通常比裸分更重要；数据不足时说明判断边界。",
+"二、专业建议",
+"结合兴趣、家庭资源、就业目标、考研考公意向，分别说明适合、谨慎和不适合的专业方向及理由。",
+"三、冲稳保方向",
+"分别解释“冲、稳、保”的筛选逻辑和风险，不要只堆学校名。若有真实数据，逐条注明年份与来源；没有数据就只给方向，不编数字。",
+"四、风险提醒",
+"至少检查专业调剂、院校专业组、选科限制、城市取舍、热门专业虚火、招生计划及数据年份变化。",
+"五、下一步建议",
+"信息不全时，从省份、分数、位次、选科、目标城市、专业偏好、家庭资源、就业/升学目标、是否接受调剂、学费范围中，只追问最关键的1至2项，并给用户可直接复制的补充模板。",
+"",
+"重要：不要只给结论，要解释为什么这样分。不要冒充真人，不做录取承诺。结尾提醒：本分析仅供志愿初筛，最终以本省教育考试院、学校招生章程和正式志愿填报系统为准。"
+].join("\n");
 function S(id){return document.getElementById(id);}
-function setMode(m){mode=m;try{localStorage.setItem('xf_mode',m);}catch(e){}var bg=S('btnG'),bf=S('btnF'),av=S('avt'),ma=S('msgArea');if(bg)bg.className=m==='gaokao'?'on':'';if(bf)bf.className=m==='fun'?'on':'';if(av)av.src=m==='fun'?'/img_scifi.png':'/img_suit.png';if(ma){if(m==='fun')ma.classList.add('fun-bg');else ma.classList.remove('fun-bg');}render();}
-function newChat(){var id=Date.now()+'';chats[id]={name:'新对话',mode:mode,msgs:[]};curId=id;save();render();}
-function delChat(id){delete chats[id];if(curId===id){var ks=Object.keys(chats);curId=ks.length?ks[ks.length-1]:null;if(!curId)newChat();}save();render();}
+function welcomeHTML(){
+  return '<div class="welcome">'+
+    '<section class="hero"><span class="eyebrow">高考志愿初筛工具</span><h1>雪峰志愿分析助手</h1>'+
+    '<p class="lead">不是只会聊天的 AI，而是会查数据、会盘专业、会拆冲稳保的高考志愿分析工具。</p>'+
+    '<p class="desc">它内置 <strong>24 省官方录取数据库</strong>，会结合省份、分数、位次、选科和专业偏好，真正去查数据、盘志愿、拆风险。系统方法论整理自<strong>张雪峰八本志愿填报专著 + 61 节专业视频课程（1500+ 分钟）</strong>，把“张雪峰那套”就业导向、专业优先、家庭资源、城市取舍和冲稳保逻辑塞进 AI。你把自己的情况说清楚，它先帮你筛掉明显不合适的选择，再讲清能冲什么、该稳什么、必须保什么。</p>'+
+    '<div class="trust-line"><span>24 省录取数据</span><span>位次优先分析</span><span>专业与就业拆解</span><span>保留联网核验能力</span></div></section>'+
+    '<section class="feature-grid"><article class="feature"><div class="num">01 / DATA</div><h3>会查数据</h3><p>内置 24 省官方录取数据库，优先结合历年录取线、位次和院校信息进行分析，不只凭感觉推荐。</p></article>'+
+    '<article class="feature"><div class="num">02 / MAJOR</div><h3>会盘专业</h3><p>从就业前景、学习难度、家庭资源、考研考公、行业门槛等角度，判断一个专业到底适不适合你。</p></article>'+
+    '<article class="feature"><div class="num">03 / RISK</div><h3>会拆冲稳保</h3><p>根据分数、位次和目标方向，把志愿拆成“冲一冲、稳一稳、保一保”，并提醒调剂和滑档风险。</p></article>'+
+    '<article class="feature"><div class="num">04 / STYLE</div><h3>说话够直白</h3><p>参考张雪峰式表达风格，不绕弯子，不只说好听话，重点讲现实选择、专业坑位和就业落点。</p></article></section>'+
+    '<section class="starter"><div class="starter-title">不知道怎么问？点一个例子直接开始</div><div class="starter-sub">信息越完整，初筛越有参考价值。位次通常比分数更关键。</div><div class="examples">'+
+    '<button class="example-btn" data-example="江苏物理类 590 分，想学计算机，怎么填？">江苏物理类 590 分，想学计算机，怎么填？</button>'+
+    '<button class="example-btn" data-example="普通家庭，想选就业稳一点的专业">普通家庭，想选就业稳一点的专业</button>'+
+    '<button class="example-btn" data-example="我这个分数能不能冲 211？">我这个分数能不能冲 211？</button>'+
+    '<button class="example-btn" data-example="电气、计算机、电子信息怎么选？">电气、计算机、电子信息怎么选？</button>'+
+    '<button class="example-btn" data-example="哪些专业看着热门但不建议乱报？">哪些专业看着热门但不建议乱报？</button></div></section>'+
+    '<div class="notice"><strong>说明：</strong>本工具参考公开志愿填报方法论和数据资料进行分析，不代表任何真人或机构的官方意见。<br><strong>免责声明：</strong>本工具仅用于高考志愿填报初步分析和思路参考，不构成最终填报建议。录取结果受当年招生计划、专业组设置、选科要求、位次变化、政策调整等多种因素影响。最终请以本省教育考试院、学校招生章程和正式志愿填报系统为准。</div></div>';
+}
+function isGaokaoChat(c){return c&&c.mode!=='fun';}
+function newChat(){var id=Date.now()+'';chats[id]={name:'新对话',mode:'gaokao',msgs:[]};curId=id;save();render();}
+function delChat(id){delete chats[id];if(curId===id){var ks=Object.keys(chats).filter(function(k){return isGaokaoChat(chats[k]);});curId=ks.length?ks[ks.length-1]:null;if(!curId)newChat();}save();render();}
 function save(){try{localStorage.setItem('xf_chats',JSON.stringify(chats));localStorage.setItem('xf_cur',curId||'');}catch(e){console.warn('save failed:',e.message);}}
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function render(){
-  try{var h='';Object.keys(chats).forEach(function(id){var c=chats[id];if(!c||c.mode!==mode)return;var p=(c.msgs&&c.msgs.length)?(c.msgs[c.msgs.length-1].content||'').slice(0,18):'空';var on=id===curId?' on':'';h+='<div class=\"item'+on+'\" data-id=\"'+id+'\">'+(c.name||p)+'<span style=\"float:right;opacity:0.4;cursor:pointer\" data-del=\"'+id+'\">x</span></div>';});
+  try{var h='';Object.keys(chats).forEach(function(id){var c=chats[id];if(!isGaokaoChat(c))return;var p=(c.msgs&&c.msgs.length)?(c.msgs[c.msgs.length-1].content||'').slice(0,18):'空';var on=id===curId?' on':'';h+='<div class=\"item'+on+'\" data-id=\"'+id+'\">'+(c.name||p)+'<span style=\"float:right;opacity:0.4;cursor:pointer\" data-del=\"'+id+'\">x</span></div>';});
   var cl=S('chatList');if(cl)cl.innerHTML=h;
   var m=S('msgArea');if(!m)return;
-  if(!curId||!chats[curId]||!chats[curId].msgs||!chats[curId].msgs.length){m.innerHTML='<div class=\"welcome\"><div class=\"icon\">'+(mode==='fun'?'🎭':'🎓')+'</div><h2>'+(mode==='fun'?'娱乐模式':'报考模式')+'</h2></div>';return;}
-  var hh='';var ms=chats[curId].msgs;for(var i=0;i<ms.length;i++){var x=ms[i];if(!x)continue;var who=x.role==='user'?'你':(chats[curId].mode==='fun'?'张雪峰':'顾问');var cls=x.role==='user'?'u':'a';hh+='<div class=\"bubble '+cls+'\"><div class=\"who\">'+who+'</div>'+esc(x.content||'')+'</div>';}
+  if(!curId||!chats[curId]||!chats[curId].msgs||!chats[curId].msgs.length){m.innerHTML=welcomeHTML();return;}
+  var hh='';var ms=chats[curId].msgs;for(var i=0;i<ms.length;i++){var x=ms[i];if(!x)continue;var who=x.role==='user'?'你':'志愿分析助手';var cls=x.role==='user'?'u':'a';hh+='<div class=\"bubble '+cls+'\"><div class=\"who\">'+who+'</div>'+esc(x.content||'')+'</div>';}
   m.innerHTML=hh;m.scrollTop=m.scrollHeight;}catch(e){console.warn('render error:',e.message);}
 }
 
 async function send(){
   var inp=S('inp');if(!inp)return;var t=inp.value.trim();if(!t)return;inp.value='';
-  if(!curId||!chats[curId])newChat();var c=chats[curId];if(!c){c={name:'新对话',mode:mode,msgs:[]};chats[curId]=c;}c.msgs.push({role:'user',content:t});if(c.name==='新对话')c.name=t.slice(0,16);render();save();
+  if(!curId||!isGaokaoChat(chats[curId]))newChat();var c=chats[curId];if(!c){c={name:'新对话',mode:'gaokao',msgs:[]};chats[curId]=c;}c.msgs.push({role:'user',content:t});if(c.name==='新对话')c.name=t.slice(0,16);render();save();
   var a=S('msgArea');if(!a)return;var ld=document.createElement('div');ld.className='bubble a';ld.innerHTML='<div class=\"who\">...</div><span class=\"dot\"></span><span class=\"dot\"></span><span class=\"dot\"></span>';a.appendChild(ld);a.scrollTop=a.scrollHeight;
   var cfg=getCfg();if(!cfg.key){c.msgs.push({role:'assistant',content:'请先点API设置填写Key'});render();save();return;}
-  var dh='';if(c.mode==='gaokao')dh=await queryData(t);
-  var prompt=(c.mode==='fun')?PF:PG;var ms=[{role:'system',content:prompt}];
+  var dh=await queryData(t);
+  var ms=[{role:'system',content:PG}];
   console.log('dataHint length:',dh.length);
   if(dh&&dh.indexOf('暂无数据')<0){ms.push({role:'system',content:'【以下是查询到的真实数据，你必须逐条引用，并据此给出冲稳保建议】\n'+dh});}
   else if(dh){ms.push({role:'system',content:'【查询结果】\n'+dh+'\n\n数据库未返回有效数据。你可以结合联网搜索结果给出方向性建议，但绝对禁止编造具体分数和位次数字。'});}
@@ -345,7 +404,7 @@ async function queryData(t){
         dbData='【本地数据库·冲稳保推荐】位次'+j.rank+'\n';
         if(j.chong&&j.chong.length){dbData+='\n▎冲 (录取位次高于你，可以试试):\n';j.chong.slice(0,7).forEach(function(d){dbData+='· '+d.school+' '+d.major+' '+d.year+'年 最低'+(d.score||'?')+'分 位次'+(d.rank||'?')+'\n';});}
         if(j.wen&&j.wen.length){dbData+='\n▎稳 (位次匹配，有把握):\n';j.wen.slice(0,7).forEach(function(d){dbData+='· '+d.school+' '+d.major+' '+d.year+'年 最低'+(d.score||'?')+'分 位次'+(d.rank||'?')+'\n';});}
-        if(j.bao&&j.bao.length){dbData+='\n▎保 (位次高于要求，稳录):\n';j.bao.slice(0,7).forEach(function(d){dbData+='· '+d.school+' '+d.major+' '+d.year+'年 最低'+(d.score||'?')+'分 位次'+(d.rank||'?')+'\n';});}
+        if(j.bao&&j.bao.length){dbData+='\n▎保 (历史位次留有较大安全边际):\n';j.bao.slice(0,7).forEach(function(d){dbData+='· '+d.school+' '+d.major+' '+d.year+'年 最低'+(d.score||'?')+'分 位次'+(d.rank||'?')+'\n';});}
         if(!j.chong.length&&!j.wen.length&&!j.bao.length){dbData+='(数据库暂无数据。查询参数: 省='+info.province+' 位次='+info.rank+' 分数='+info.score+' 关键词='+(info.majors.join(',')||'无')+')\n';}
       }
     }
@@ -405,25 +464,26 @@ async function testConn(){var su=S('sUrl'),sk=S('sKey'),sm=S('sModel'),sv=S('sTa
 
 // Event bindings
 function B(id,ev,fn){var el=S(id);if(el)el[ev]=fn;}
-B('btnG','onclick',function(){setMode('gaokao');});B('btnF','onclick',function(){setMode('fun');});
 B('newBtn','onclick',function(){newChat();});B('sendBtn','onclick',function(){send();});
 B('themeBtn','onclick',function(){document.body.classList.toggle('dark');localStorage.setItem('xf_dark',document.body.classList.contains('dark')?'1':'');});
 B('apiBtn','onclick',function(){openSet();});B('closeSetBtn','onclick',function(){closeSet();});B('testBtn','onclick',function(){testConn();});
 B('setOverlay','onclick',function(e){if(e.target===this)closeSet();});
 B('inp','onkeydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
-B('chatList','onclick',function(e){var el=e.target;if(el.dataset.del){delChat(el.dataset.del);return;}var item=el.closest('.item');if(item){curId=item.dataset.id;if(chats[curId]&&chats[curId].mode)setMode(chats[curId].mode);else render();save();}});
+B('msgArea','onclick',function(e){var btn=e.target.closest('.example-btn');if(!btn)return;var inp=S('inp');if(inp){inp.value=btn.dataset.example||'';inp.focus();}});
+B('chatList','onclick',function(e){var el=e.target;if(el.dataset.del){delChat(el.dataset.del);return;}var item=el.closest('.item');if(item){curId=item.dataset.id;render();save();}});
 // init
 try{
 if(localStorage.getItem('xf_dark')==='1')document.body.classList.add('dark');
-if(!curId||!chats[curId]){var nid=Date.now()+'';chats[nid]={name:'新对话',mode:mode,msgs:[]};curId=nid;save();}
-setMode(mode);render();
+if(!curId||!isGaokaoChat(chats[curId])){var ks=Object.keys(chats).filter(function(id){return isGaokaoChat(chats[id]);});if(ks.length){curId=ks[ks.length-1];}else{var nid=Date.now()+'';chats[nid]={name:'新对话',mode:'gaokao',msgs:[]};curId=nid;}save();}
+try{localStorage.removeItem('xf_mode');}catch(e){}
+render();
 }catch(e){console.warn('init error:',e.message);document.body.innerHTML='<div style=\"padding:40px;text-align:center\"><h2>加载失败</h2><p>请清除浏览器缓存后刷新 (Ctrl+Shift+Del)</p></div>';}
 </script></body></html>'''
 
 def main():
-    port = 8765
+    port = 8766
     server = HTTPServer(('0.0.0.0', port), Handler)
-    print(f'雪峰Agent: http://127.0.0.1:{port}/')
+    print(f'雪峰志愿分析助手: http://127.0.0.1:{port}/')
     print(f'数据库: {"已加载" if HAS_DB else "未找到"}')
     try: server.serve_forever()
     except KeyboardInterrupt: server.shutdown(); print('\n已停止')
