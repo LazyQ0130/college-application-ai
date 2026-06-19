@@ -32,8 +32,8 @@ def query_db(province=None, school=None, major=None, limit=50):
     return [{'province':r[0],'year':r[1],'school_name':r[2],'major_name':r[3],'score':r[4],'rank':r[5]} for r in rows]
 
 def web_search(query, n=5):
-    # Baidu scraping no longer works (blocked). Return hint to use Tavily.
-    return ["搜索无结果。请在前端API设置中填入Tavily Key以启用联网搜索（tavily.com免费注册）。"]
+    # Baidu scraping no longer works (blocked). No Tavily result means no web data.
+    return []
 
 class Handler(BaseHTTPRequestHandler):
     def _send(self, data, code=200):
@@ -202,6 +202,11 @@ body{font:14px/1.7 'PingFang SC','Microsoft YaHei',sans-serif;background:var(--b
 .feature .num{font-size:11px;color:var(--red);font-weight:800;letter-spacing:.12em}.feature h3{margin-top:7px;font-size:16px}.feature p{margin-top:7px;color:var(--t2);font-size:12px;line-height:1.75}
 .starter{margin-top:14px;padding:18px;border:1px solid var(--bdr);border-radius:14px;background:var(--card)}
 .starter-title{font-weight:700}.starter-sub{margin-top:3px;color:var(--t2);font-size:12px}
+.quick-form{display:grid;grid-template-columns:1.1fr .8fr 1fr 1fr 1.6fr;gap:10px;margin-top:14px;padding:14px;border:1px solid var(--bdr);border-radius:12px;background:var(--bg)}
+.quick-field label{display:block;margin-bottom:4px;color:var(--t2);font-size:11px}.quick-field input,.quick-field select{width:100%;height:38px;padding:7px 9px;border:1px solid var(--bdr);border-radius:8px;background:var(--card);color:var(--txt);font:inherit;outline:none}
+.quick-field input:focus,.quick-field select:focus{border-color:var(--red);box-shadow:0 0 0 3px var(--red-soft)}
+.quick-form-note{grid-column:1/-1;color:var(--t2);font-size:11px;line-height:1.6}.quick-form-note strong{color:var(--red)}
+.quick-actions{grid-column:1/-1;display:flex;align-items:center;gap:10px}.quick-actions button{padding:9px 15px;border:0;border-radius:8px;background:var(--red);color:#fff;font-weight:700;cursor:pointer}.quick-status{font-size:11px;color:var(--t2)}.quick-status.error{color:var(--red)}
 .examples{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.example-btn{padding:7px 11px;border:1px solid var(--bdr);border-radius:999px;background:var(--bg);color:var(--txt);font-size:12px;cursor:pointer}.example-btn:hover{border-color:var(--red);color:var(--red);background:var(--red-soft)}
 .notice{margin-top:14px;padding:12px 14px;border-left:3px solid var(--gold);border-radius:8px;background:var(--card);color:var(--t2);font-size:11px;line-height:1.7}
 .bubble{max-width:75%;padding:12px 16px;border-radius:10px;margin-bottom:10px;font-size:13px;line-height:1.7;white-space:pre-wrap;word-break:break-word}
@@ -216,6 +221,14 @@ body{font:14px/1.7 'PingFang SC','Microsoft YaHei',sans-serif;background:var(--b
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;display:none;align-items:center;justify-content:center}
 .overlay>div{background:var(--card);border-radius:12px;padding:28px;width:460px;border:1px solid var(--bdr)}
 .overlay h3{margin-bottom:16px}.overlay label{display:block;font-size:11px;color:var(--t2);margin:12px 0 4px}
+.label-row{display:flex;align-items:center;gap:6px;margin:12px 0 4px}.label-row label{margin:0}
+.api-help{position:relative;display:inline-flex}
+.api-help-btn{width:17px;height:17px;padding:0;border:1px solid #9a9a9a!important;border-radius:50%;background:#eeeeee!important;color:#777!important;font-family:inherit;font-size:11px;font-weight:700;line-height:15px;cursor:pointer;text-align:center}
+.api-help-btn:hover,.api-help-btn:focus{outline:none;border-color:#666!important;background:#e2e2e2!important;color:#555!important;box-shadow:0 0 0 3px rgba(128,128,128,.14)}
+.api-help-pop{position:absolute;left:24px;top:-12px;z-index:3;width:300px;padding:12px 14px;border:1px solid var(--bdr);border-radius:10px;background:var(--card);box-shadow:var(--shadow);color:var(--txt);font-size:12px;line-height:1.7;opacity:0;visibility:hidden;transform:translateY(4px);transition:.16s ease;pointer-events:none}
+.api-help-pop::before{content:'';position:absolute;left:-6px;top:15px;width:10px;height:10px;background:var(--card);border-left:1px solid var(--bdr);border-bottom:1px solid var(--bdr);transform:rotate(45deg)}
+.api-help-pop ol{margin:0;padding-left:18px}.api-help-pop li+li{margin-top:5px}.api-help-pop a{color:var(--red);font-weight:700}
+.api-help:hover .api-help-pop,.api-help:focus-within .api-help-pop,.api-help.open .api-help-pop{opacity:1;visibility:visible;transform:translateY(0);pointer-events:auto}
 .overlay input{width:100%;padding:10px;border:1px solid var(--bdr);border-radius:6px;font:inherit;background:var(--bg);color:var(--txt)}
 .overlay .btns{display:flex;gap:8px;margin-top:20px}.overlay .btns button{padding:10px 20px;border:1px solid var(--bdr);border-radius:6px;cursor:pointer}.overlay .btns .ok{flex:1;background:var(--red);color:#fff}
 .st{font-size:12px;margin-top:10px}.st.g{color:var(--green)}.st.b{color:var(--red)}
@@ -223,51 +236,89 @@ body{font:14px/1.7 'PingFang SC','Microsoft YaHei',sans-serif;background:var(--b
 .dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
 @keyframes dot{0%,80%,100%{transform:scale(.6)}40%{transform:scale(1)}}
 .bubble{position:relative;z-index:1}.welcome{position:relative;z-index:1}
-@media(max-width:1080px){.feature-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hero h1{font-size:31px}.msgs{padding:20px 24px}}
-@media(max-width:760px){body{height:100dvh}.side{display:none}.bar{padding:8px 12px;flex-wrap:wrap}.bar .logo{width:100%;font-size:15px}.bar img{width:34px;height:34px}.msgs{padding:14px 12px}.hero{padding:23px 19px}.hero h1{font-size:28px}.hero .lead{font-size:16px}.feature-grid{grid-template-columns:1fr}.composer{padding:8px 12px 12px}.inp button{padding:0 17px}.bubble{max-width:90%}}
+@media(max-width:1080px){.feature-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.quick-form{grid-template-columns:repeat(2,minmax(0,1fr))}.hero h1{font-size:31px}.msgs{padding:20px 24px}}
+@media(max-width:760px){body{height:100dvh}.side{display:none}.bar{padding:8px 12px;flex-wrap:wrap}.bar .logo{width:100%;font-size:15px}.bar img{width:34px;height:34px}.msgs{padding:14px 12px}.hero{padding:23px 19px}.hero h1{font-size:28px}.hero .lead{font-size:16px}.feature-grid,.quick-form{grid-template-columns:1fr}.quick-actions{align-items:flex-start;flex-direction:column}.composer{padding:8px 12px 12px}.inp button{padding:0 17px}.bubble{max-width:90%}.overlay>div{width:calc(100% - 24px);padding:22px}.api-help-pop{position:fixed;left:12px;right:12px;top:86px;width:auto}.api-help-pop::before{display:none}}
 </style></head><body>
 <div class="side"><h2>雪峰志愿分析助手</h2><div class="sub">录取数据 × 志愿方法论</div>
 <div class="list" id="chatList"></div><div class="new-btn" id="newBtn">+ 新建对话</div></div>
 <div class="main"><div class="bar"><span class="logo">雪峰志愿分析助手</span>
 <img id="avt" src="/img_suit.png"><button id="themeBtn">🌓</button><button class="api-btn" id="apiBtn">API设置</button></div>
 <div class="msgs" id="msgArea"></div>
-<div class="composer"><div class="input-tip">输入你的省份、分数、位次、选科和想学方向，我帮你先做一版志愿初筛。</div><div class="inp"><textarea id="inp" aria-label="志愿分析问题" placeholder="例如：江苏物理类 590 分，位次 3.2 万，想学计算机，怎么填？"></textarea><button id="sendBtn">开始分析</button></div><div class="footer-disclaimer">分析结果仅作初步参考，最终请以本省教育考试院、学校招生章程和正式志愿填报系统为准。</div></div></div>
+<div class="composer"><div class="input-tip">推荐写法：省份 + 科类/选科 + 分数 + 位次 + 专业方向。位次请写纯数字，例如“20000”，不要只写“2w”。</div><div class="inp"><textarea id="inp" aria-label="志愿分析问题" placeholder="例如：江苏物理类，618 分，位次 20000，想学工科，优先考虑电气和电子信息。"></textarea><button id="sendBtn">开始分析</button></div><div class="footer-disclaimer">分析结果仅作初步参考，最终请以本省教育考试院、学校招生章程和正式志愿填报系统为准。</div></div></div>
 <div class="overlay" id="setOverlay"><div><h3>API设置</h3>
 <label>Base URL</label><input id="sUrl" placeholder="https://api.deepseek.com">
-<label>API Key</label><input type="password" id="sKey" placeholder="sk-...">
+<div class="label-row"><label for="sKey">API Key</label><div class="api-help" id="apiKeyHelp"><button type="button" class="api-help-btn" id="apiKeyHelpBtn" aria-label="查看 DeepSeek API Key 获取说明" aria-expanded="false" aria-controls="apiKeyHelpPop">!</button><div class="api-help-pop" id="apiKeyHelpPop" role="tooltip"><ol><li>打开 <a href="https://platform.deepseek.com" target="_blank" rel="noopener">platform.deepseek.com</a>，注册并登录。</li><li>左侧点击 <strong>API Keys</strong> → 创建 → 复制 <strong>sk-</strong> 开头的密钥。密钥只显示一次，请妥善保存。</li></ol></div></div></div><input type="password" id="sKey" placeholder="sk-...">
 <label>Model</label><input id="sModel" placeholder="deepseek-chat">
 <label>Tavily Key <span style="color:var(--red);font-size:11px;font-weight:600">(选填，建议配置)</span></label><input type="password" id="sTav" placeholder="tvly-..."><div style="background:var(--side);border-radius:6px;padding:8px 10px;margin:4px 0 8px;font-size:11px;line-height:1.6;color:var(--txt)"><b>做什么的？</b> 用于联网检索最新分数线、学校招生信息和行业趋势，帮助补充本地数据库。<br><b>为什么建议配置？</b> 招生计划和政策每年会变化，联网结果可用于交叉核验，但仍应以考试院和学校官网为准。<br><b>怎么获取？</b> 打开 <a href="https://tavily.com" target="_blank" rel="noopener" style="color:var(--red);font-weight:600">tavily.com</a> → 注册账号 → 复制 tvly- 开头的 Key → 粘贴到这里。<br><b>不填可以吗？</b> 可以，本地录取数据库和基础聊天功能仍然可用。</div>
 <div class="btns"><button id="closeSetBtn">取消</button><button class="ok" id="testBtn">保存并测试</button></div><div class="st" id="st"></div></div></div>
 <script>
 var chats,curId;try{chats=JSON.parse(localStorage.getItem('xf_chats')||'{}');}catch(e){chats={};localStorage.removeItem('xf_chats');}curId=localStorage.getItem('xf_cur')||'';
 var PG=[
-"你是“雪峰志愿分析助手”的高考志愿分析顾问。你的表达直白、务实、就业导向，可参考张雪峰式的公开志愿填报方法论，但你不是张雪峰本人，也不代表任何真人或机构，不得声称官方授权、亲自指导或保证录取。",
+"你是“雪峰志愿分析助手”的娱乐化高考志愿顾问。你不是任何现实人物，也不代表任何真人或机构；不要声称本人、官方授权、亲自指导或保证录取。但你的直播间式表达必须非常鲜明：东北味、语速快、动作多、先炸场再讲理、甩完段子马上给能执行的路。",
 "",
-"【核心规则】",
-"1. 位次优先：先看省份、选科和位次，再看裸分。引用数据必须写清省份、年份、分数、位次和来源。",
-"2. 省份志愿政策感知：专业+院校模式（浙江80/山东96/河北96/重庆96/辽宁112）；院校+专业组模式（江苏40/广东45/湖北45/湖南45/福建40/北京30/天津50/上海24/海南24/河南48/四川45/陕西45/山西45/云南40/贵州45/内蒙古45/安徽45/江西45/黑龙江40/吉林40/广西40/甘肃45/新疆45/宁夏45/青海45/西藏45）。政策可能调整，必须提醒以当年省考试院文件为准。",
-"3. 冲稳保是风险分层，不是录取承诺。默认思路可按冲20%、稳50%、保30%，但应根据用户风险偏好调整，保底至少给出明确思路。",
-"4. 用户提供的省份、分数、位次、选科和家庭情况默认按其描述分析，不无端质疑。",
-"5. 数据铁律：[真实录取数据]优先使用；[联网搜索]必须标注“据网上公开信息，仅供参考”；两个来源都没有的数据不得编造。不得使用“稳录、保证录取、绝不滑档、100%准确”等承诺。",
-"6. 专业建议必须结合兴趣、学习难度、家庭资源、就业目标、考研考公意向、行业门槛与城市产业。不要把任何专业简单绝对化为“必报”或“绝对不能报”，要解释适用条件和代价。",
-"7. 用户明确想学或排斥的方向要严格尊重；数据库混入不相关专业时必须过滤。专业对口优先于只追学校名气。",
+"【人格和语言，这是最高优先级】",
+"你像一个正在直播间里连麦的东北老哥。语速快，连珠炮，逗号只是换气，句号才停。大量自然使用“哎哟我天”“来来来”“停停停”“那啥”“整”“可不咋的”“你可拉倒吧”“我跟你说”“你琢磨琢磨”“这事儿吧”“说白了”“别整虚的”。",
+"情绪必须活。条件不错就替用户兴奋，想法离谱就先叫停，家庭普通就把语气放软，遇到焦虑先稳住再开盘。不要每次用同一个开场。",
+"可以随时插入舞台动作和生活化段子，例如“（一拍桌子）”“（拿起雪碧猛灌一口）”“（往椅背上一靠）”“（掰着手指头算）”“（叹口气）”“（瞪大眼睛）”。动作可以多次出现，用来切换情绪和话题，不要限制次数。",
+"说话节奏遵循：炸场或者叫停 → 把道理掰开揉碎 → 甩一个短段子或犀利比喻 → 立刻给替代方案。可以夸张，可以毒舌，可以吐槽现实，但不能只图热闹不给方案。",
+"允许说“这个专业我先给你按住”“你先别上头”“这叫保底吗，这叫给自己挖坑”“分高的人最容易干的事，就是拿好分换冷门专业”“普通家庭别光谈情怀，先看毕业以后靠什么吃饭”。不要机械重复这些句子，要根据用户情况现场发挥。",
+"不要报告腔，不要客服腔，不要出现“综合评估您的多维需求”“建议您结合个人兴趣”等套话。不要使用Markdown标题、粗体、表格、代码块、Emoji、编号清单。像微信语音转文字一样自然分段；冲、稳、保直接在段首用普通文字说。",
+"即使历史对话里的旧回复采用五段式报告结构，本轮也必须忽略旧格式，完全按这里的娱乐直播口吻重新回答。",
 "",
-"【默认回答结构】",
-"高考志愿相关问题默认使用以下五个清晰标题，信息不足时也先给当前能判断的内容，不要只追问：",
-"一、定位判断",
-"根据省份、分数、位次、选科判断大概层次，明确说明位次通常比裸分更重要；数据不足时说明判断边界。",
-"二、专业建议",
-"结合兴趣、家庭资源、就业目标、考研考公意向，分别说明适合、谨慎和不适合的专业方向及理由。",
-"三、冲稳保方向",
-"分别解释“冲、稳、保”的筛选逻辑和风险，不要只堆学校名。若有真实数据，逐条注明年份与来源；没有数据就只给方向，不编数字。",
-"四、风险提醒",
-"至少检查专业调剂、院校专业组、选科限制、城市取舍、热门专业虚火、招生计划及数据年份变化。",
-"五、下一步建议",
-"信息不全时，从省份、分数、位次、选科、目标城市、专业偏好、家庭资源、就业/升学目标、是否接受调剂、学费范围中，只追问最关键的1至2项，并给用户可直接复制的补充模板。",
+"【事实和数据，这是不可突破的底线】",
+"1. 位次优先：先看省份、选科和省内位次，再看裸分。用户提供的数据默认准确，不质疑、不反问“你确定吗”。",
+"2. 系统消息附带的【本地数据库·冲稳保推荐】是真实查询结果，必须优先使用。只能引用其中实际出现的学校、专业、年份、分数和位次，不得改写数字。",
+"3. 系统消息附带的【联网搜索·仅供参考】必须明确说“据网上公开信息，仅供参考”。数据库和联网结果都没有的学校，可以讲择校方向，但绝对不能给它编分数、位次、录取概率或所谓内部消息。",
+"4. 数据库只给分数没给位次时，必须直接说“数据库未提供位次”，严禁自己估算“大概5000名”“约30000名”。",
+"5. 冲、稳、保只是风险分层，不是录取承诺。禁止“稳录”“闭眼进”“保证录取”“绝不滑档”“100%准确”；可以用有娱乐感但不承诺的表达，例如“这个能当稳档重点看，但最后还得拿当年计划复核”。",
+"6. 省份志愿数量和规则可能调整。专业+院校模式参考：浙江80、山东96、河北96、重庆96、辽宁112；院校+专业组模式参考：江苏40、广东45、湖北45、湖南45、福建40、北京30、天津50、上海24、海南24、河南48、四川45、陕西45、山西45、云南40、贵州45、内蒙古45、安徽45、江西45、黑龙江40、吉林40、广西40、甘肃45、新疆45、宁夏45、青海45、西藏45。最后提醒以当年省考试院文件为准。",
 "",
-"重要：不要只给结论，要解释为什么这样分。不要冒充真人，不做录取承诺。结尾提醒：本分析仅供志愿初筛，最终以本省教育考试院、学校招生章程和正式志愿填报系统为准。"
+"【专业判断】",
+"用户说了想学什么，就围绕这些专业和相关方向推荐；用户明确排斥的方向直接过滤。数据库混入不相关专业时必须手动剔除，不能因为学校名气大就硬塞。",
+"用户只说“工科”时，先把路拆开：计算机/软件偏代码和互联网技术；电子信息/通信偏硬件、芯片和通信；电气/自动化偏电力、控制和工业系统；机械优先区分传统制造与机器人、智能制造、车辆电子；能源交通看行业学校和城市产业；材料化工要结合学校层次、深造意愿和具体赛道。",
+"表达可以鲜明甚至夸张，但不能把任何专业说成人人必报或谁学谁后悔。可以说“普通家庭先盯电、智、控”，随后必须补清楚学校层次、个人能力、学历和城市这些前提。",
+"不要编具体工资，不要说“毕业必进大厂”“电网只要关系”“本科一定没用”。家庭资源可以影响路径，但不能成为歧视性结论。",
+"",
+"【自然回答流程】",
+"开头直接炸场并定调。不要复述用户整段信息，抓住位次和最大矛盾说，例如：“（一拍桌子）哎哟我天，618分两万名，你先别光盯着工科俩字！工科从敲代码到拧螺丝跨度比你家到学校都大，来来来，咱先把路拆开。”",
+"然后把专业方向讲明白。每个判断都要带理由和适用条件，像聊天一样自然换段，不写正式小标题。",
+"再讲冲稳保。数据库有结果就从真实结果里挑有代表性的学校和专业，自然说成“冲的咱这么摆”“稳的才是主菜”“保底你给我认真点”。数据很多时不需要机械抄完，但必须告诉用户剩余志愿如何按相同规则补齐。",
+"最后用几句把专业组调剂、选科限制、中外合作学费、军警体检、城市和年份变化里与用户有关的坑点出来。信息不全时，只追问最关键的1至2项，别连审户口。",
+"没有可核验录取数据时，先明确说“（喝口雪碧）这回数据库和联网都没给我吐出能核验的位次，咱不瞎编。”然后只讲专业和择校方法，不报具体录取数字。",
+"",
+"【娱乐强度示例，只学节奏，不要逐字复读】",
+"“（拍桌子）停停停，你这分不是没学校上，是最容易犯选择困难症！学校牌子、专业质量、城市，你仨都想要，那不叫填志愿，那叫许愿。”",
+"“（拿起雪碧喝一口）计算机能冲，电气能稳，自动化能兜，但你别听见‘热门’俩字就往里钻。热门专业学得稀碎，毕业照样抓瞎。”",
+"“保底不是找个分低的塞进去。保底得是录了你真去、专业你真学、四年以后不骂自己的学校。你整个不想去的当保底，那不是保险，那是定时炸弹。”",
+"",
+"重要：娱乐感必须贯穿整篇，不要开头拍一下桌子后面又变回报告。先回答再追问，怼完必须给路。始终保持虚构助手身份，不冒充任何真人；不编造数据，不做录取承诺。结尾用口语提醒：这只是志愿初筛，最后以本省考试院、学校招生章程和正式填报系统为准。"
 ].join("\n");
 function S(id){return document.getElementById(id);}
+function buildStructuredQuestion(){
+  var province=S('qProvince'),score=S('qScore'),rank=S('qRank'),subject=S('qSubject'),major=S('qMajor'),status=S('quickStatus'),inp=S('inp');
+  if(!province||!rank||!major||!inp)return;
+  var p=province.value.trim(),r=rank.value.trim(),m=major.value.trim(),s=score?score.value.trim():'',sub=subject?subject.value.trim():'';
+  if(!p||!r||!m){
+    if(status){status.textContent='请至少填写省份、省内位次和专业方向。';status.className='quick-status error';}
+    return;
+  }
+  if(!/^\d+$/.test(r)||parseInt(r)<=0){
+    if(status){status.textContent='位次请填纯数字，例如 20000，不要写 2w。';status.className='quick-status error';}
+    return;
+  }
+  if(s&&(!/^\d{3}$/.test(s)||parseInt(s)>750)){
+    if(status){status.textContent='分数请填 0—750 之间的数字，例如 618。';status.className='quick-status error';}
+    return;
+  }
+  var parts=['我是'+p+'考生'];
+  if(sub)parts.push((sub==='文科'||sub==='理科'?'科类':'选科')+sub);
+  if(s)parts.push(s+'分');
+  parts.push('省内位次'+parseInt(r));
+  parts.push('想学'+m);
+  inp.value=parts.join('，')+'。请结合录取数据，帮我分析专业方向和冲稳保填报思路。';
+  inp.focus();
+  if(status){status.textContent='已生成标准问题。你可以在下方继续补充目标城市、是否接受调剂、考研或就业偏好。';status.className='quick-status';}
+}
 function welcomeHTML(){
   return '<div class="welcome">'+
     '<section class="hero"><span class="eyebrow">高考志愿初筛工具</span><h1>雪峰志愿分析助手</h1>'+
@@ -278,7 +329,15 @@ function welcomeHTML(){
     '<article class="feature"><div class="num">02 / MAJOR</div><h3>会盘专业</h3><p>从就业前景、学习难度、家庭资源、考研考公、行业门槛等角度，判断一个专业到底适不适合你。</p></article>'+
     '<article class="feature"><div class="num">03 / RISK</div><h3>会拆冲稳保</h3><p>根据分数、位次和目标方向，把志愿拆成“冲一冲、稳一稳、保一保”，并提醒调剂和滑档风险。</p></article>'+
     '<article class="feature"><div class="num">04 / STYLE</div><h3>说话够直白</h3><p>参考张雪峰式表达风格，不绕弯子，不只说好听话，重点讲现实选择、专业坑位和就业落点。</p></article></section>'+
-    '<section class="starter"><div class="starter-title">不知道怎么问？点一个例子直接开始</div><div class="starter-sub">信息越完整，初筛越有参考价值。位次通常比分数更关键。</div><div class="examples">'+
+    '<section class="starter"><div class="starter-title">不想组织文字？按项填写，自动生成标准问题</div><div class="starter-sub">省份、位次和专业方向最关键。位次通常比分数更有参考价值。</div>'+
+    '<div class="quick-form"><div class="quick-field"><label for="qProvince">高考省份 *</label><select id="qProvince"><option value="">请选择</option><option>北京</option><option>天津</option><option>上海</option><option>重庆</option><option>河北</option><option>山西</option><option>辽宁</option><option>吉林</option><option>黑龙江</option><option>江苏</option><option>浙江</option><option>安徽</option><option>福建</option><option>江西</option><option>山东</option><option>河南</option><option>湖北</option><option>湖南</option><option>广东</option><option>广西</option><option>海南</option><option>四川</option><option>贵州</option><option>云南</option><option>西藏</option><option>陕西</option><option>甘肃</option><option>青海</option><option>宁夏</option><option>新疆</option><option>内蒙古</option></select></div>'+
+    '<div class="quick-field"><label for="qScore">高考分数</label><input id="qScore" type="number" min="0" max="750" inputmode="numeric" placeholder="如 618"></div>'+
+    '<div class="quick-field"><label for="qRank">省内位次 *</label><input id="qRank" type="number" min="1" inputmode="numeric" placeholder="如 20000"></div>'+
+    '<div class="quick-field"><label for="qSubject">选科</label><select id="qSubject"><option value="">请选择</option><optgroup label="新高考 3+1+2"><option value="物化生">物化生</option><option value="物化政">物化政</option><option value="物化地">物化地</option><option value="物生政">物生政</option><option value="物生地">物生地</option><option value="物政地">物政地</option><option value="史化生">史化生</option><option value="史化政">史化政</option><option value="史化地">史化地</option><option value="史生政">史生政</option><option value="史生地">史生地</option><option value="史政地">史政地</option></optgroup><optgroup label="新高考 3+3（其他组合）"><option value="物化史">物化史</option><option value="物生史">物生史</option><option value="物史政">物史政</option><option value="物史地">物史地</option><option value="化生政">化生政</option><option value="化生地">化生地</option><option value="化政地">化政地</option><option value="生政地">生政地</option></optgroup><optgroup label="老高考"><option value="理科">理科</option><option value="文科">文科</option></optgroup></select></div>'+
+    '<div class="quick-field"><label for="qMajor">专业方向 *</label><input id="qMajor" placeholder="如 工科、电气、计算机"></div>'+
+    '<div class="quick-form-note"><strong>注意：</strong>位次请填纯数字“20000”，不要填“2w”；分数只填数字“618”，不要把分数和位次写反。</div>'+
+    '<div class="quick-actions"><button type="button" data-action="build-question">生成标准问题</button><span class="quick-status" id="quickStatus">生成后会放入下方输入框，你可以继续补充城市、调剂和学费要求。</span></div></div>'+
+    '<div class="examples">'+
     '<button class="example-btn" data-example="江苏物理类 590 分，想学计算机，怎么填？">江苏物理类 590 分，想学计算机，怎么填？</button>'+
     '<button class="example-btn" data-example="普通家庭，想选就业稳一点的专业">普通家庭，想选就业稳一点的专业</button>'+
     '<button class="example-btn" data-example="我这个分数能不能冲 211？">我这个分数能不能冲 211？</button>'+
@@ -308,7 +367,8 @@ async function send(){
   var dh=await queryData(t);
   var ms=[{role:'system',content:PG}];
   console.log('dataHint length:',dh.length);
-  if(dh&&dh.indexOf('暂无数据')<0){ms.push({role:'system',content:'【以下是查询到的真实数据，你必须逐条引用，并据此给出冲稳保建议】\n'+dh});}
+  var hasData=dh&&(dh.indexOf('【本地数据库')>=0||dh.indexOf('【联网搜索')>=0);
+  if(hasData){ms.push({role:'system',content:'【以下是查询到的真实数据，你必须优先使用，并据此给出冲稳保建议】\n'+dh});}
   else if(dh){ms.push({role:'system',content:'【查询结果】\n'+dh+'\n\n数据库未返回有效数据。你可以结合联网搜索结果给出方向性建议，但绝对禁止编造具体分数和位次数字。'});}
   else{ms.push({role:'system',content:'【注意】数据库和联网搜索均未找到具体数据。你必须明确说"暂无该省该专业的录取数据"，建议查省教育考试院官网。不准编造任何具体位次和分数数字。可以给择校方向建议，但要注明"以下为方向性建议，非具体数据"。'});}
   var info=extractInfo(t);if(info.province){var pr='【省份志愿政策提醒】';var ng={'浙江':80,'山东':96,'河北':96,'重庆':96,'辽宁':112};var gg={'江苏':40,'广东':45,'湖北':45,'湖南':45,'福建':40,'北京':30,'天津':50,'上海':24,'海南':24,'河南':48,'四川':45,'陕西':45,'山西':45,'云南':40,'贵州':45,'内蒙古':45,'安徽':45,'江西':45,'黑龙江':40,'吉林':40,'广西':40,'甘肃':45,'新疆':45,'宁夏':45,'青海':45,'西藏':45};if(ng[info.province]){pr+=info.province+'是专业+院校模式，可填'+ng[info.province]+'个志愿。你必须推荐足够多的学校(至少30-50所)，不要只给3-5所！';}else if(gg[info.province]){pr+=info.province+'是院校+专业组模式，可填'+gg[info.province]+'个专业组。你必须推荐足够数量，填满80%以上位置！';}else{pr+=info.province+'请推荐足够多的学校和专业，并提醒注意调剂风险。';}ms.push({role:'system',content:pr});}
@@ -317,8 +377,6 @@ async function send(){
     var r=await fetch(cfg.url.replace(/\/+$/,'')+'/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+cfg.key},body:JSON.stringify({model:cfg.model||'deepseek-chat',messages:ms,temperature:0.7})});
     if(!r.ok){var e=await r.json().catch(function(){return{};});throw new Error(e.error&&e.error.message||'HTTP '+r.status);}
     var d=await r.json();var reply=d.choices[0].message.content;
-    if(dh&&dh.indexOf('暂无数据')<0)reply='[查询到的数据]\n'+dh+'\n---\n'+reply;
-    else reply='[查询参数] '+dh+'\n---\n'+reply;
     c.msgs.push({role:'assistant',content:reply});
   }catch(e){c.msgs.push({role:'assistant',content:'出错：'+e.message});}
   render();save();
@@ -326,7 +384,7 @@ async function send(){
 
 // ===== 智能数据提取（正则，无需API） =====
 function extractInfo(t){
-  var info={province:'',rank:0,score:0,major:'',school:''};
+  var info={province:'',rank:0,score:0,subject:'',major:'',school:''};
   // 省份：找文本中最先出现的那个（不是列表中最先的）
   var provs=['北京','天津','上海','重庆','河北','山西','辽宁','吉林','黑龙江','江苏','浙江','安徽','福建','江西','山东','河南','湖北','湖南','广东','广西','海南','四川','贵州','云南','西藏','陕西','甘肃','青海','宁夏','新疆','内蒙古'];
   var bestIdx=t.length,bestProv='';
@@ -335,11 +393,44 @@ function extractInfo(t){
     if(idx>=0&&idx<bestIdx){bestIdx=idx;bestProv=provs[i];}
   }
   info.province=bestProv;
-  var rm=t.match(/(\d{4,7})\s*[位名]/)||t.match(/[位名]次?\s*(\d{4,7})/)||t.match(/排[名行]\s*(\d{4,7})/);
-  if(rm){info.rank=parseInt(rm[1])||parseInt(rm[2])||0;}
-  var sm=t.match(/(\d{3})\s*分/);if(sm){info.score=parseInt(sm[1]);}
+  var subjectCombos=['物化生','物化政','物化地','物生政','物生地','物政地','史化生','史化政','史化地','史生政','史生地','史政地','物化史','物生史','物史政','物史地','化生政','化生地','化政地','生政地'];
+  function canonicalSubject(chars){
+    if(!chars||chars.length!==3)return'';
+    for(var j=0;j<subjectCombos.length;j++){
+      var combo=subjectCombos[j],matched=true;
+      for(var k=0;k<combo.length;k++){if(chars.indexOf(combo[k])<0){matched=false;break;}}
+      if(matched)return combo;
+    }
+    return'';
+  }
+  for(var i=0;i<subjectCombos.length;i++){
+    if(t.indexOf(subjectCombos[i])>=0){info.subject=subjectCombos[i];break;}
+  }
+  if(!info.subject){
+    var shortSubject=t.match(/(?:选科|科目|组合)?\s*(?:是|为|:|：)?\s*([物化生史政地]{3})(?:组合)?/);
+    if(shortSubject)info.subject=canonicalSubject(shortSubject[1]);
+  }
+  if(!info.subject){
+    var subjectText=t.match(/(?:选科|科目|组合)\s*(?:是|为|:|：)?\s*((?:(?:物理|化学|生物|历史|政治|地理)\s*(?:[+、，,\s]\s*)?){3})/);
+    if(subjectText){
+      var subjectNames=subjectText[1].match(/物理|化学|生物|历史|政治|地理/g)||[];
+      var subjectShort={'物理':'物','化学':'化','生物':'生','历史':'史','政治':'政','地理':'地'};
+      var normalizedSubject=subjectNames.map(function(name){return subjectShort[name];}).join('');
+      info.subject=canonicalSubject(normalizedSubject);
+    }
+  }
+  if(!info.subject){
+    var legacySubject=t.match(/物理类|历史类|理科|文科/);
+    if(legacySubject)info.subject=legacySubject[0];
+  }
+  var rankWan=t.match(/(?:位次|排名|排位|省排)?\s*(\d+(?:\.\d+)?)\s*[wW万](?:名|位)?/);
+  var rm=t.match(/(\d{4,7})\s*[位名]/)||t.match(/[位名]次?\s*(\d{4,7})/)||t.match(/排[名行位]?\s*(\d{4,7})/);
+  if(rankWan){info.rank=Math.round(parseFloat(rankWan[1])*10000);}
+  else if(rm){info.rank=parseInt(rm[1])||parseInt(rm[2])||0;}
+  var sm=t.match(/(\d{3})\s*分/)||t.match(/(?:物理类|历史类|理科|文科|[物化生史政地]{3})\s*(\d{3})(?!\d)/)||t.match(/(?:高考|考了|成绩|分数)\s*(?:是|为|:|：)?\s*(\d{3})(?!\d)/);
+  if(sm){info.score=parseInt(sm[1]);}
   // 专业：过滤掉否定句式中的词（不学X/不接受X/不读X/不选X/别推荐X）
-  var majors=['计算机','软件','电气','机械','自动化','土木','临床','口腔','法学','会计','金融','物联网','人工智能','大数据','电子','通信','材料','化工','生物','医学','护理','师范','英语','日语','新闻','设计','美术','音乐','体育','汉语言','思政','马克思','数学','化学','地理','航空航天','能源','交通','环境'];
+  var majors=['计算机','软件','电气','机械','自动化','土木','临床','口腔','法学','会计','金融','物联网','人工智能','大数据','电子','通信','材料','化工','生物','医学','护理','师范','英语','日语','新闻','设计','美术','音乐','体育','汉语言','思政','马克思','数学','化学','地理','航空航天','能源','交通','环境','仪器'];
   var neg=t.match(/(?:不学|不接受|不读|不选|别推荐|别学|拒绝|排斥|不想学|不考虑).*?(?:[。，,;\n]|$)/g)||[];
   // 也排除描述性用语：XX一般/不好/不行/差/弱/烂，XX好/擅长这类不是专业偏好
   var desc=t.match(/(?:英语|数学|语文|物理|化学|生物|历史|地理|政治).*?(?:一般|不好|不行|差|弱|烂|还行|凑合|勉强)/g)||[];
@@ -350,6 +441,7 @@ function extractInfo(t){
     if(t.indexOf(majors[i])>=0&&negStr.indexOf(majors[i])<0){found.push(majors[i]);}
   }
   if(found.length>0)info.major=found.join(',');
+  else if(/工科|工学|理工科/.test(t))info.major='计算机,软件,电子,通信,电气,自动化,机械,仪器,航空航天,能源,交通';
   var sch=t.match(/[一-鿿]{2,8}(大学|学院)/);if(sch){info.school=sch[0];}
   return info;
 }
@@ -377,19 +469,19 @@ async function searchWeb(query, cfg, n){
 // ===== 主数据管线：AI分析提取→DB搜→联网搜→整合 =====
 async function queryData(t){
   var cfg=getCfg();
-  var info={province:'',rank:0,score:0,majors:[],schools:[],keywords:[]};
+  var info={province:'',rank:0,score:0,subject:'',majors:[],schools:[],keywords:[]};
 
   // 直接正则提取（不用AI，避免API卡住）
   var re=extractInfo(t);
   info.province=re.province||'';
   info.rank=re.rank||0;
   info.score=re.score||0;
+  info.subject=re.subject||'';
   info.majors=re.major?[re.major]:[];
   info.schools=re.school?[re.school]:[];
   console.log('正则提取:',JSON.stringify(info));
 
-  console.log('DEBUG queryData params:',JSON.stringify({province:info.province,rank:info.rank,score:info.score,majors:info.majors}));
-  if(!info.province&&!info.score){console.log('缺少省份和分数，跳过DB');return'缺少省份或分数位次';}
+  if(!info.province||(!info.rank&&!info.score)){console.log('缺少省份或分数位次，跳过DB');return'缺少省份或分数位次，暂不查询数据库';}
 
   // 第3步：搜索本地数据库
   var dbData='';
@@ -451,15 +543,16 @@ async function queryData(t){
   }catch(e){console.warn('联网搜索失败:',e.message);}
 
   // 第5步：整合
-  var result='[DEBUG] province='+info.province+' rank='+info.rank+' score='+info.score+' majors='+(info.majors||[]).join(',')+'\n';
+  var result='【已识别条件】省份：'+(info.province||'未提供')+'；选科：'+(info.subject||'未提供')+'；位次：'+(info.rank||'未提供')+'；分数：'+(info.score||'未提供')+'；方向：'+((info.majors||[]).join(',')||'未提供')+'\n';
   if(dbData)result+=dbData+'\n';
   if(webData)result+=webData+'\n';
-  if(!dbData&&!webData)result+='DB和联网搜索均无结果。查询URL: recommend?province='+encodeURIComponent(info.province)+'&rank='+info.rank+'&score='+info.score+'&keyword='+encodeURIComponent((info.majors||[]).join(','))+'\n';
+  if(!dbData&&!webData)result+='数据库和联网搜索均未找到可核验的具体录取数据，只能提供方向性分析，禁止编造分数或位次。\n';
   return result;
 }
 function getCfg(){return{url:localStorage.getItem('cf_url')||'https://api.deepseek.com',key:localStorage.getItem('cf_key')||'',model:localStorage.getItem('cf_model')||'deepseek-chat',tavily:localStorage.getItem('cf_tav')||''};}
 function openSet(){var ov=S('setOverlay');if(ov)ov.style.display='flex';var c=getCfg();var su=S('sUrl'),sk=S('sKey'),sm=S('sModel'),st=S('sTav');if(su)su.value=c.url;if(sk)sk.value=c.key;if(sm)sm.value=c.model;if(st)st.value=c.tavily;}
-function closeSet(){var ov=S('setOverlay');if(ov)ov.style.display='none';}
+function closeApiHelp(){var h=S('apiKeyHelp'),b=S('apiKeyHelpBtn');if(h)h.classList.remove('open');if(b)b.setAttribute('aria-expanded','false');}
+function closeSet(){var ov=S('setOverlay');if(ov)ov.style.display='none';closeApiHelp();}
 async function testConn(){var su=S('sUrl'),sk=S('sKey'),sm=S('sModel'),sv=S('sTav'),stt=S('st');if(!su||!sk||!stt)return;var u=su.value.trim(),k=sk.value.trim(),m=sm?sm.value.trim():'',tv=sv?sv.value.trim():'';if(!u||!k){stt.innerHTML='<span class=\"st b\">请填写URL和Key</span>';return;}try{localStorage.setItem('cf_url',u);localStorage.setItem('cf_key',k);localStorage.setItem('cf_model',m);if(tv)localStorage.setItem('cf_tav',tv);}catch(e){}stt.textContent='测试中...';try{var r=await fetch(u.replace(/\/+$/,'')+'/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+k},body:JSON.stringify({model:m||'deepseek-chat',messages:[{role:'user',content:'hi'}],max_tokens:5})});if(r.ok){stt.innerHTML='<span class=\"st g\">连接OK</span>';setTimeout(closeSet,800);}else{var e=await r.json().catch(function(){return{};});stt.innerHTML='<span class=\"st b\">'+(e.error&&e.error.message||'')+'</span>';}}catch(e){stt.innerHTML='<span class=\"st b\">'+e.message+'</span>';}}
 
 // Event bindings
@@ -467,9 +560,11 @@ function B(id,ev,fn){var el=S(id);if(el)el[ev]=fn;}
 B('newBtn','onclick',function(){newChat();});B('sendBtn','onclick',function(){send();});
 B('themeBtn','onclick',function(){document.body.classList.toggle('dark');localStorage.setItem('xf_dark',document.body.classList.contains('dark')?'1':'');});
 B('apiBtn','onclick',function(){openSet();});B('closeSetBtn','onclick',function(){closeSet();});B('testBtn','onclick',function(){testConn();});
+B('apiKeyHelpBtn','onclick',function(e){e.stopPropagation();var h=S('apiKeyHelp');var open=h&&h.classList.toggle('open');this.setAttribute('aria-expanded',open?'true':'false');});
 B('setOverlay','onclick',function(e){if(e.target===this)closeSet();});
+document.addEventListener('click',function(e){var h=S('apiKeyHelp');if(h&&!h.contains(e.target))closeApiHelp();});
 B('inp','onkeydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
-B('msgArea','onclick',function(e){var btn=e.target.closest('.example-btn');if(!btn)return;var inp=S('inp');if(inp){inp.value=btn.dataset.example||'';inp.focus();}});
+B('msgArea','onclick',function(e){var action=e.target.closest('[data-action=\"build-question\"]');if(action){buildStructuredQuestion();return;}var btn=e.target.closest('.example-btn');if(!btn)return;var inp=S('inp');if(inp){inp.value=btn.dataset.example||'';inp.focus();}});
 B('chatList','onclick',function(e){var el=e.target;if(el.dataset.del){delChat(el.dataset.del);return;}var item=el.closest('.item');if(item){curId=item.dataset.id;render();save();}});
 // init
 try{
