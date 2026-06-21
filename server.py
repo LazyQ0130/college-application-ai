@@ -216,6 +216,14 @@ body{font:14px/1.7 'PingFang SC','Microsoft YaHei',sans-serif;background:var(--b
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;display:none;align-items:center;justify-content:center}
 .overlay>div{background:var(--card);border-radius:12px;padding:28px;width:460px;border:1px solid var(--bdr)}
 .overlay h3{margin-bottom:16px}.overlay label{display:block;font-size:11px;color:var(--t2);margin:12px 0 4px}
+.label-row{display:flex;align-items:center;gap:6px;margin:12px 0 4px}.label-row label{margin:0}
+.api-help{position:relative;display:inline-flex}
+.api-help-btn{width:17px;height:17px;padding:0;border:1px solid #9a9a9a!important;border-radius:50%;background:#eee!important;color:#777!important;font-family:inherit;font-size:11px;font-weight:700;line-height:15px;cursor:pointer;text-align:center}
+.api-help-btn:hover,.api-help-btn:focus{outline:none;border-color:#666!important;background:#e2e2e2!important;color:#555!important;box-shadow:0 0 0 3px rgba(128,128,128,.14)}
+.api-help-pop{position:absolute;left:24px;top:-12px;z-index:3;width:300px;padding:12px 14px;border:1px solid var(--bdr);border-radius:10px;background:var(--card);box-shadow:var(--shadow);color:var(--txt);font-size:12px;line-height:1.7;opacity:0;visibility:hidden;transform:translateY(4px);transition:.16s ease;pointer-events:none}
+.api-help-pop::before{content:'';position:absolute;left:-6px;top:15px;width:10px;height:10px;background:var(--card);border-left:1px solid var(--bdr);border-bottom:1px solid var(--bdr);transform:rotate(45deg)}
+.api-help-pop ol{margin:0;padding-left:18px}.api-help-pop li+li{margin-top:5px}.api-help-pop a{color:var(--red);font-weight:700}
+.api-help:hover .api-help-pop,.api-help:focus-within .api-help-pop,.api-help.open .api-help-pop{opacity:1;visibility:visible;transform:translateY(0);pointer-events:auto}
 .overlay input{width:100%;padding:10px;border:1px solid var(--bdr);border-radius:6px;font:inherit;background:var(--bg);color:var(--txt)}
 .overlay .btns{display:flex;gap:8px;margin-top:20px}.overlay .btns button{padding:10px 20px;border:1px solid var(--bdr);border-radius:6px;cursor:pointer}.overlay .btns .ok{flex:1;background:var(--red);color:#fff}
 .st{font-size:12px;margin-top:10px}.st.g{color:var(--green)}.st.b{color:var(--red)}
@@ -224,7 +232,7 @@ body{font:14px/1.7 'PingFang SC','Microsoft YaHei',sans-serif;background:var(--b
 @keyframes dot{0%,80%,100%{transform:scale(.6)}40%{transform:scale(1)}}
 .bubble{position:relative;z-index:1}.welcome{position:relative;z-index:1}
 @media(max-width:1080px){.feature-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hero h1{font-size:31px}.msgs{padding:20px 24px}}
-@media(max-width:760px){body{height:100dvh}.side{display:none}.bar{padding:8px 12px;flex-wrap:wrap}.bar .logo{width:100%;font-size:15px}.bar img{width:34px;height:34px}.msgs{padding:14px 12px}.hero{padding:23px 19px}.hero h1{font-size:28px}.hero .lead{font-size:16px}.feature-grid{grid-template-columns:1fr}.composer{padding:8px 12px 12px}.inp button{padding:0 17px}.bubble{max-width:90%}}
+@media(max-width:760px){body{height:100dvh}.side{display:none}.bar{padding:8px 12px;flex-wrap:wrap}.bar .logo{width:100%;font-size:15px}.bar img{width:34px;height:34px}.msgs{padding:14px 12px}.hero{padding:23px 19px}.hero h1{font-size:28px}.hero .lead{font-size:16px}.feature-grid{grid-template-columns:1fr}.composer{padding:8px 12px 12px}.inp button{padding:0 17px}.bubble{max-width:90%}.overlay>div{width:calc(100% - 24px);padding:22px}.api-help-pop{position:fixed;left:12px;right:12px;top:86px;width:auto}.api-help-pop::before{display:none}}
 </style></head><body>
 <div class="side"><h2>雪峰志愿分析助手</h2><div class="sub">录取数据 × 志愿方法论</div>
 <div class="list" id="chatList"></div><div class="new-btn" id="newBtn">+ 新建对话</div></div>
@@ -234,7 +242,7 @@ body{font:14px/1.7 'PingFang SC','Microsoft YaHei',sans-serif;background:var(--b
 <div class="composer"><div class="input-tip">输入你的省份、分数、位次、选科和想学方向，我帮你先做一版志愿初筛。</div><div class="inp"><textarea id="inp" aria-label="志愿分析问题" placeholder="例如：江苏物理类 590 分，位次 3.2 万，想学计算机，怎么填？"></textarea><button id="sendBtn">开始分析</button></div><div class="footer-disclaimer">分析结果仅作初步参考，最终请以本省教育考试院、学校招生章程和正式志愿填报系统为准。</div></div></div>
 <div class="overlay" id="setOverlay"><div><h3>API设置</h3>
 <label>Base URL</label><input id="sUrl" placeholder="https://api.deepseek.com">
-<label>API Key</label><input type="password" id="sKey" placeholder="sk-...">
+<div class="label-row"><label for="sKey">API Key</label><div class="api-help" id="apiKeyHelp"><button type="button" class="api-help-btn" id="apiKeyHelpBtn" aria-label="查看 DeepSeek API Key 获取说明" aria-expanded="false" aria-controls="apiKeyHelpPop">!</button><div class="api-help-pop" id="apiKeyHelpPop" role="tooltip"><ol><li>打开 <a href="https://platform.deepseek.com" target="_blank" rel="noopener">platform.deepseek.com</a>，注册并登录。</li><li>左侧点击 <strong>API Keys</strong> → 创建 → 复制 <strong>sk-</strong> 开头的密钥。密钥只显示一次，请妥善保存。</li></ol></div></div></div><input type="password" id="sKey" placeholder="sk-...">
 <label>Model</label><input id="sModel" placeholder="deepseek-chat">
 <label>Tavily Key <span style="color:var(--red);font-size:11px;font-weight:600">(选填，建议配置)</span></label><input type="password" id="sTav" placeholder="tvly-..."><div style="background:var(--side);border-radius:6px;padding:8px 10px;margin:4px 0 8px;font-size:11px;line-height:1.6;color:var(--txt)"><b>做什么的？</b> 用于联网检索最新分数线、学校招生信息和行业趋势，帮助补充本地数据库。<br><b>为什么建议配置？</b> 招生计划和政策每年会变化，联网结果可用于交叉核验，但仍应以考试院和学校官网为准。<br><b>怎么获取？</b> 打开 <a href="https://tavily.com" target="_blank" rel="noopener" style="color:var(--red);font-weight:600">tavily.com</a> → 注册账号 → 复制 tvly- 开头的 Key → 粘贴到这里。<br><b>不填可以吗？</b> 可以，本地录取数据库和基础聊天功能仍然可用。</div>
 <div class="btns"><button id="closeSetBtn">取消</button><button class="ok" id="testBtn">保存并测试</button></div><div class="st" id="st"></div></div></div>
@@ -459,7 +467,8 @@ async function queryData(t){
 }
 function getCfg(){return{url:localStorage.getItem('cf_url')||'https://api.deepseek.com',key:localStorage.getItem('cf_key')||'',model:localStorage.getItem('cf_model')||'deepseek-chat',tavily:localStorage.getItem('cf_tav')||''};}
 function openSet(){var ov=S('setOverlay');if(ov)ov.style.display='flex';var c=getCfg();var su=S('sUrl'),sk=S('sKey'),sm=S('sModel'),st=S('sTav');if(su)su.value=c.url;if(sk)sk.value=c.key;if(sm)sm.value=c.model;if(st)st.value=c.tavily;}
-function closeSet(){var ov=S('setOverlay');if(ov)ov.style.display='none';}
+function closeApiHelp(){var h=S('apiKeyHelp'),b=S('apiKeyHelpBtn');if(h)h.classList.remove('open');if(b)b.setAttribute('aria-expanded','false');}
+function closeSet(){var ov=S('setOverlay');if(ov)ov.style.display='none';closeApiHelp();}
 async function testConn(){var su=S('sUrl'),sk=S('sKey'),sm=S('sModel'),sv=S('sTav'),stt=S('st');if(!su||!sk||!stt)return;var u=su.value.trim(),k=sk.value.trim(),m=sm?sm.value.trim():'',tv=sv?sv.value.trim():'';if(!u||!k){stt.innerHTML='<span class=\"st b\">请填写URL和Key</span>';return;}try{localStorage.setItem('cf_url',u);localStorage.setItem('cf_key',k);localStorage.setItem('cf_model',m);if(tv)localStorage.setItem('cf_tav',tv);}catch(e){}stt.textContent='测试中...';try{var r=await fetch(u.replace(/\/+$/,'')+'/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+k},body:JSON.stringify({model:m||'deepseek-chat',messages:[{role:'user',content:'hi'}],max_tokens:5})});if(r.ok){stt.innerHTML='<span class=\"st g\">连接OK</span>';setTimeout(closeSet,800);}else{var e=await r.json().catch(function(){return{};});stt.innerHTML='<span class=\"st b\">'+(e.error&&e.error.message||'')+'</span>';}}catch(e){stt.innerHTML='<span class=\"st b\">'+e.message+'</span>';}}
 
 // Event bindings
@@ -467,7 +476,9 @@ function B(id,ev,fn){var el=S(id);if(el)el[ev]=fn;}
 B('newBtn','onclick',function(){newChat();});B('sendBtn','onclick',function(){send();});
 B('themeBtn','onclick',function(){document.body.classList.toggle('dark');localStorage.setItem('xf_dark',document.body.classList.contains('dark')?'1':'');});
 B('apiBtn','onclick',function(){openSet();});B('closeSetBtn','onclick',function(){closeSet();});B('testBtn','onclick',function(){testConn();});
+B('apiKeyHelpBtn','onclick',function(e){e.stopPropagation();var h=S('apiKeyHelp');var open=h&&h.classList.toggle('open');this.setAttribute('aria-expanded',open?'true':'false');});
 B('setOverlay','onclick',function(e){if(e.target===this)closeSet();});
+document.addEventListener('click',function(e){var h=S('apiKeyHelp');if(h&&!h.contains(e.target))closeApiHelp();});
 B('inp','onkeydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
 B('msgArea','onclick',function(e){var btn=e.target.closest('.example-btn');if(!btn)return;var inp=S('inp');if(inp){inp.value=btn.dataset.example||'';inp.focus();}});
 B('chatList','onclick',function(e){var el=e.target;if(el.dataset.del){delChat(el.dataset.del);return;}var item=el.closest('.item');if(item){curId=item.dataset.id;render();save();}});
