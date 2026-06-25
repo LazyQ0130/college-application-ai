@@ -35,6 +35,9 @@ call :find_python
 if not defined PYTHON_EXE goto install_failed
 
 :start_server
+call :check_database
+if errorlevel 1 exit /b 1
+
 echo Starting Snowpeak College Application Assistant...
 start "" powershell -NoProfile -WindowStyle Hidden -Command "Start-Sleep -Seconds 2; Start-Process 'http://127.0.0.1:8766/'"
 "%PYTHON_EXE%" %PYTHON_ARGS% server.py
@@ -44,6 +47,18 @@ if errorlevel 1 (
     pause
 )
 exit /b
+
+:check_database
+echo Checking local admission database...
+"%PYTHON_EXE%" %PYTHON_ARGS% -c "exec('''import gzip, os, shutil, sqlite3, sys\nDB = 'admission_clean.db'\nGZ = 'admission_clean.db.gz'\nif not os.path.exists(DB):\n    if os.path.exists(GZ):\n        print('[DB] admission_clean.db not found; extracting admission_clean.db.gz...')\n        with gzip.open(GZ, 'rb') as src, open(DB, 'wb') as dst:\n            shutil.copyfileobj(src, dst)\n    else:\n        print('[DB ERROR] admission_clean.db and admission_clean.db.gz were not found.')\n        sys.exit(2)\ntry:\n    conn = sqlite3.connect(DB)\n    total = conn.execute('select count(*) from admission').fetchone()[0]\n    conn.close()\nexcept Exception as exc:\n    print('[DB ERROR] Cannot open admission_clean.db: ' + str(exc))\n    sys.exit(3)\nif total <= 0:\n    print('[DB ERROR] admission table is empty.')\n    sys.exit(4)\nprint(f'[DB OK] admission_clean.db loaded. Rows: {total}')\n''')"
+if errorlevel 1 (
+    echo.
+    echo The local admission database is not ready.
+    echo Make sure admission_clean.db.gz is in this folder, then run this file again.
+    pause
+    exit /b 1
+)
+exit /b 0
 
 :find_python
 py -3 -c "import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)" >nul 2>&1
